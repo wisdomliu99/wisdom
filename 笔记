@@ -1,0 +1,229 @@
+学习方法：记笔记
+一，环境准备
+	1.设置静态IP，
+		1）如果是新克隆的虚拟机就要重新生成mac地址
+		2）查看网关
+		3）修改：
+			cd /etc/sysconfig/network-sysconfig/
+			ll
+			vi ifcfg-ens33
+				BOOTPROTO="static"         # 使用静态IP地址，默认为dhcp
+				IPADDR="192.168.72.11"   # 设置的静态IP地址
+				NETMASK="255.255.255.0"    # 子网掩码
+				GATEWAY="192.168.72.2"    # 网关地址
+				DNS1="192.168.72.2"       # DNS服务器
+				ONBOOT="yes"
+			:wq	:x	:q	:q!
+			systemctl restart network
+			ifconfig/ip add
+			ping www.baidu.com
+
+	2.可以连接外网ping www.baidu.com
+		解决办法：
+			查看网关，
+			查看文件ifcfg-ens33,
+			错误文件：ll -a .ifcfg-ens33.swp  rm xxxx
+			查看虚拟网卡
+			查看服务service： NAT  DHCP
+			重启网络服务，
+			重启虚拟机
+	3.安装客户端
+		注意：所有操作都要以管理员身份运行（安装、破解、启动）
+	
+二，虚拟化
+	1.桥接模式:虚拟机占用主机局域网IP地址
+	2.host-only模式：不能连外网
+	3.NAT模式：虚拟机不占用主机局域网IP地址
+		vmware dhcp service |vmware nat service
+三，克隆
+	1.完全克隆
+	2.链接克隆
+	注意：1）新克隆的虚拟机不要先启动，要先修改MAC地址
+		2）启动虚拟机，修改主机名和IP
+	
+
+	
+四，ssh免密登陆
+	1.ssh-keygen -t rsa(dsa) 4次回车
+	2.ssh-copy-id xxxx
+	3.ssh root@xxx
+作业：
+	1.三台虚拟机之间实现免密登陆，文件上传下载
+	2.Linux进阶，shell编程预习
+	
+五、Linux进阶
+	1.grep
+	2.su
+		useradd xxx  新增用户
+		passwd  xxx  设置密码
+	su xiaoli切换用户
+	su - xiaoli 切换用户，并切换到用户的家目录
+	从root用户切换到一般用户不需要输入密码，反之要输入密码
+	3.sudo
+		visudo
+		username  ALL=(ALL)       ALL
+		username  ALL=(ALL)		/bin/ls,/bin/.....
+	sudo原理：在/etc/sudoers中配置当前用户的权限
+六，系统管理服务
+systemctl –查看系统中后台服务进程
+systemctl status sshd.service—查看指定服务进程状态
+systemctl stop sshd.service—停止服务
+systmectl start sshd.service—启动服务
+systemctl restart sshd.service—重启服务
+systemctl disable sshd.service—开机禁止启动
+systemctl  enable sshd.service—开机启动
+systemctl is-enalbled sshd.service—查看是否开机启动
+
+七，网络服务
+	1.hostname
+	2.vi /etc/hostname
+	3.ip，主机名映射   /etc/hosts
+
+八，定时器
+		1.yum install crontabs—安装crontab
+		2.启动服务  systemctl start crond
+		3.开机启动  systemctl enable crond
+		4.crontab -e 编辑定时任务
+		5.crontab -r 删除定时任务
+		6.* * * * * command
+		分 小时 天 月 周
+		
+九，shell
+	1.编辑脚本，首先要定义解释器#!/bin/bash
+	2.修改权限
+	3.执行脚本：
+		./test.sh  
+		/bin/bash test.sh
+		/...../test.sh
+	4.变量
+		v_name=value
+		${v_name}
+		unset v_name
+
+	5.shell运算符，shell流程控制，shell函数
+	
+十，docker
+	1.安装 yum install docker 
+	2.启动 systemctl start docker
+	3.开机启动 systemctl enable docker
+	4.查看centos镜像 docker search centos
+	5.查看stars>=100的镜像 
+		1)docker search centos -s 100
+		2)docker search mysql --filter stars=100
+	6.获取centos镜像 docker pull centos
+	7.查看镜像 docker images
+	8.运行镜像 docker run -t -i xxxx /bin/bash
+	9.查看运行的容器  docker ps
+	10.查看所有的容器  docker ps -a
+	11.安装组建json  gem install json
+	12.创建新的镜像 docker commit -m 'add json gem' -a 'Docker Container'  a2bc6c1a2b43  my/sinatra:v2
+	
+	
+	镜像的上传和下载
+	1.申请账号：https://hub.docker.com/申请一个账号，dockerlaowang
+	2.创建仓库：create repository --dockerlaowang/sinatra--public
+	3.修改镜像：
+		my/sinatra:v1--->dockerlaowang/sinatra:v3
+	4.上传镜像
+		docker login
+		docker push dockerlaowang/sinatra:v3
+		
+	5.下载镜像
+		docker pull dockerlaowang/sinatra:v1
+	
+		
+	镜像本地保存和加载
+	1.保存镜像到本地
+		docker save -o xxx.tar.gz dockerlaowang/sinatra:v1
+		
+	2.本地镜像包加载成镜像
+		docker load --input xxx.tar.gz 
+		docker load < xxx.tar.gz
+		cat rarlinux-x64-5.3.0.tar.gz | docker import - rarlinux:5.3
+		
+	镜像的删除
+		docker  rmi image_id
+		docker rmi -f image_id
+		
+	容器的运行
+		docker run my/centos:v1 cal
+		docker run -t -i my/centos:v1 /bin/bash
+		docker start/stop/ cid
+		后台守护进程
+		docker run -d docker.io/centos /bin/sh -c "while true;do echo hello docker;sleep 1;done"
+		docker ps
+		docker logs cid
+		
+	容器的后台运行
+	1.attach
+		docker run -itd my/centos:v1.0 /bin/bash
+		docker ps
+		docker attach cid/names
+		缺点：他是同步的，容易阻塞
+	2.nsenter
+		#下载源码包
+		1.wget https://www.kernel.org/pub/linux/utils/util-linux/v2.24/util-linux-2.24.tar.gz
+		#解压包
+		2.tar -zxvf util-linux-2.24.tar.gz
+		#进入解压包的根目录
+		3.cd util-linux-2.24
+		#编译，有可能需要安装gcc   yum install gcc
+		4../configure --without-ncurses && make nsenter
+		#编译后nsenter脚本拷贝到环境变量的一个目录
+		5.cp nsenter /usr/local/bin
+		6.获取pid
+		docker inspect f7cddebf8ed8
+		docker inspect -f {{.State.Pid}} f7cddebf8ed8
+		
+		7.通过pid和后台容器交互
+			nsenter --target 8475 --mount --uts --ipc --net --pid 
+	
+	面试题：和后台运行的容器交互有几种方式？
+	作业：
+		1.讲过的内容
+		2.参照课件8，搭建私有仓库
+		
+		
+		
+		
+              容器的导入、导出、删除
+              1.导出
+                 sudo docker export d8ac45209ale > centos.tar.gz
+              2.导入
+                  cat centos.tar.gz | docker import - my centos:v1
+              3.删除
+                 docker rm -f cid
+
+搭建私有仓库
+ 1.下载工具registry
+  docker pull registry
+ 2.修改配置文件/etc/docker/dae,on.json
+  e
+ 3.重新启动docker服务
+  systemctl restart docker
+ 4.运行registry镜像
+  docker run -d -p 5000:5000 -v /root/centos/registry:/tmp
+ 5.修改镜像
+  my/sinatra:v1 --->192.168.146.31:50000/sinatra:v2
+  
+ 6.上传镜像
+  
+
+
+问题总结：
+1.权限问题：Cannot open directory . Permission denied
+	加参数--privileged=true
+  docker?run?-d?-P?-it?--name?web10?-v?/root/docker:/opt/docker:rw?--privileged=true?192.163.41.11:5000/centos?/bin/bash 
+2.容器自动退出
+	运行容器：docker run -dit my/centos /bin/bash
+	attach / nsenter
+	进入容器：docker exec -it cid /bin/bash
+3.ipv4 disable 
+	vi /usr/lib/sysctl.d/00-system.conf
+	添加net.ipv4.ip_forward=1
+	#重启network服务
+	systemctl restart network
+
+
+
+	
